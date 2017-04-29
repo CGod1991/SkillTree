@@ -1,0 +1,20 @@
+  在Zabbix中使用agent收集并上报数据时，有两种数据上报的模式：主动模式和被动模式。这两种模式的主要区别在于请求发起者的不同，主动模式是由agent端发起请求，而被动模式则是由server端发起请求。
+  主动模式的具体通信过程，主要分为两个部分：获取监控项列表和上报数据。
+    获取监控项列表：
+    1、Agent建立一个到Server的TCP连接；
+    2、Agent请求所要收集的监控项的列表；
+    3、Server返回给Agent一个item list；
+    4、Agent接收到Server返回的item list，更新以前的item list。主要是保存在内存中；
+    5、Agent关闭TCP连接；
+    6、Agent根据itme list中的信息，收集数据。
+    上报数据：
+    1、Agent建立到Server的TCP连接；
+    2、Agent上报根据item list收集到的监控项数据；
+    3、Server接收到数据后，返回响应状态；
+    4、Agent获取到Server的响应后，关闭连接。
+  被动模式的具体通信过程：
+  1、Server建立一个到指定Agent的TCP连接；
+  2、Server发送要收集的监控项信息；
+  3、Agent收到请求后，返回响应数据；
+  4、Server接收到响应数据并进行处理；
+  5、Server关闭连接。
