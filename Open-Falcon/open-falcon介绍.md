@@ -90,24 +90,114 @@ open-falcon 中的所有组件大体上可以分为两类：绘图组件和报�
 - Alarm 从 redis 的队列中读取报警 event，进行相应的处理。比如：发送短信、发送邮件或者调用 callback。如果要发送短信或邮件，Alarm 并不负责实际的发送操作，而是把短信或邮件的内容发送到 redis 中的对应队列中，由 Sender 执行具体的发送操作。
 - Sender 会从 redis 的队列中读取短信或邮件的内容，然后调用用户实现的短信或邮件发送接口，执行具体的发送操作。
 
-## 问题
+### 自定义数据
 
-1、 使用命令`./env/bin/pip install -r pip_requirements.txt`安装 portal 组件时报错：
-	
-```shell
-  Downloading/unpacking Flask==0.10.1 (from -r pip_requirements.txt (line 1))
-  Could not fetch URL https://pypi.python.org/simple/Flask/: There was a problem confirming the ssl certificate: <urlopen error [Errno 1] _ssl.c:492: error:14090086:SSL routines:SSL3_GET_SERVER_CERTIFICATE:certificate verify failed>
-  Will skip URL https://pypi.python.org/simple/Flask/ when looking for download links for Flask==0.10.1 (from -r pip_requirements.txt (line 1))
-  Could not fetch URL https://pypi.python.org/simple/: There was a problem confirming the ssl certificate: <urlopen error [Errno 1] _ssl.c:492: error:14090086:SSL routines:SSL3_GET_SERVER_CERTIFICATE:certificate verify failed>
-  Will skip URL https://pypi.python.org/simple/ when looking for download links for Flask==0.10.1 (from -r pip_requirements.txt (line 1))
-  Cannot fetch index base URL https://pypi.python.org/simple/
-  Could not fetch URL https://pypi.python.org/simple/Flask/: There was a problem confirming the ssl certificate: <urlopen error [Errno 1] _ssl.c:492: error:14090086:SSL routines:SSL3_GET_SERVER_CERTIFICATE:certificate verify failed>
-  Will skip URL https://pypi.python.org/simple/Flask/ when looking for download links for Flask==0.10.1 (from -r pip_requirements.txt (line 1))
-  Could not fetch URL https://pypi.python.org/simple/Flask/0.10.1: There was a problem confirming the ssl certificate: <urlopen error [Errno 1] _ssl.c:492: error:14090086:SSL routines:SSL3_GET_SERVER_CERTIFICATE:certificate verify failed>
-  Will skip URL https://pypi.python.org/simple/Flask/0.10.1 when looking for download links for Flask==0.10.1 (from -r pip_requirements.txt (line 1))
-  Could not find any downloads that satisfy the requirement Flask==0.10.1 (from -r pip_requirements.txt (line 1))
-Cleaning up...
-No distributions at all found for Flask==0.10.1 (from -r pip_requirements.txt (line 1))
-Storing complete log in /root/.pip/pip.log
+open-falcon 支持用户将自定义的监控数据进行上报。Agent 组件提供了 API，用户可以将自己收集的监控数据 push 到 Agent 的接口中，由 Agent 进行上报。
+
+自定义的数据要以 json 的格式进行推送，同时，有些字段是要必须指定的。主要是以下七个字段：
+- metric: 最核心的字段，代表这个采集项具体度量的是什么, 比如是 cpu_idle 呢，还是 memory_free, 还是 qps。 
+- endpoint: 标明 metric 的主体(属主)，比如 metric 是 cpu_idle，那么 Endpoint 就表示这是哪台机器的 cpu_idle。
+- timestamp: 表示汇报该数据时的 unix 时间戳，注意是整数，代表的是秒。
+- value: 代表该 metric 在当前时间点的值，float64。
+- step: 表示该数据采集项的汇报周期，这对于后续的配置监控策略很重要，必须明确指定。
+- counterType: 只能是 COUNTER 或者 GAUGE 二选一，前者表示该数据采集项为计时器类型，后者表示其为原值 (注意大小写)。
+	- GAUGE：即用户上传什么样的值，就原封不动的存储
+	- COUNTER：指标在存储和展现的时候，会被计算为 speed，即（当前值 - 上次值）/ 时间间隔
+- tags: 一组逗号分割的键值对, 对 metric 进一步描述和细化, 可以是空字符串. 比如 idc=lg，比如 service=xbox 等，多个 tag 之间用逗号分割。
+
+下面是一个自定义数据 push 到 open-falcon 的例子，python 实现：
+```python
+#!-*- coding:utf8 -*-
+
+import requests
+import time
+import json
+
+ts = int(time.time())
+payload = [
+    {
+        "endpoint": "test-endpoint",
+        "metric": "test-metric",
+        "timestamp": ts,
+        "step": 60,
+        "value": 1,
+        "counterType": "GAUGE",
+        "tags": "idc=lg,loc=beijing",
+    },
+
+    {
+        "endpoint": "test-endpoint",
+        "metric": "test-metric2",
+        "timestamp": ts,
+        "step": 60,
+        "value": 2,
+        "counterType": "GAUGE",
+        "tags": "idc=lg,loc=beijing",
+    },
+]
+
+r = requests.post("http://127.0.0.1:1988/v1/push", data=json.dumps(payload))
+
+print r.text
 ```
-解决方法：修改安装命令，使用`./env/bin/pip install -i http://pypi.python.org/simple -r pip_requirements.txt`进行安装。
+
+## 自定义数据源
+
+在 open-falcon 中，绘图组件和报警组件之间是没有依赖的，如果用户只想用报警功能，那么可以只安装报警组件，然后接入自己的数据源即可。
+
+Transfer 组件有开通 rpc 端口，用户只要将自己的数据发送到该端口，Transfer 就可以接收并转发给 Judge 组件。数据格式为 json rpc
+格式。
+
+下面是一个简单的通过 python 客户端向 Transfer 发送数据的例子：
+```python
+import json
+import socket
+import itertools
+import time
+ 
+class RPCClient(object):
+ 
+    def __init__(self, addr, codec=json):
+        self._socket = socket.create_connection(addr)
+        self._id_iter = itertools.count()
+        self._codec = codec
+ 
+    def _message(self, name, *params):
+        return dict(id=self._id_iter.next(),
+                    params=list(params),
+                    method=name)
+ 
+    def call(self, name, *params):
+        req = self._message(name, *params)
+        id = req.get('id')
+ 
+        mesg = self._codec.dumps(req)
+        self._socket.sendall(mesg)
+ 
+        # This will actually have to loop if resp is bigger
+        resp = self._socket.recv(4096)
+        resp = self._codec.loads(resp)
+ 
+        if resp.get('id') != id:
+            raise Exception("expected id=%s, received id=%s: %s"
+                            %(id, resp.get('id'), resp.get('error')))
+ 
+        if resp.get('error') is not None:
+            raise Exception(resp.get('error'))
+ 
+        return resp.get('result')
+ 
+    def close(self):
+        self._socket.close()
+ 
+
+if __name__ == '__main__':
+    rpc = RPCClient(("127.0.0.1", 8433))
+    for i in xrange(10000):
+        mv1 = dict(endpoint='host.niean', metric='metric.niean.1', value=i, step=60, 
+            counterType='GAUGE', tags='tag=t'+str(i), timestamp=int(time.time()))
+        mv2 = dict(endpoint='host.niean', metric='metric.niean.2', value=i, step=60, 
+            counterType='COUNTER', tags='tag=t'+str(i), timestamp=int(time.time()))
+        print rpc.call("Transfer.Update", [mv1, mv2])
+```
+
