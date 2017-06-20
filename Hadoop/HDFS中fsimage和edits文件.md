@@ -24,6 +24,16 @@ fsimage 中并不会包含 DataNode 的信息，而是包含了 DataNode 上块�
 
 edits 文件中保存的是 HDFS 所有更新操作的路径，客户端执行的所有写操作首先会写入 edits 文件中。
 
-当 NameNode 刚启动的时候，除了将 fsimage 的内容加载到内存中之外，还会执行 edits 文件中的所有操作。所以说，如果 edits 文件过大的话，会导致 NameNode 的启动时间很长，因此需要对 fsimage 和 edits 进行合并来减小 edits 的大小。
+当 NameNode 刚启动的时候，除了将 fsimage 的内容加载到内存中之外，还会执行 edits 文件中的所有操作。当 NameNode 处于该阶段的时候，HDFS 系统处于安全模式，客户端无法对 HDFS 执行修改操作。
+
+所以说，如果 edits 文件过大的话，会导致 NameNode 停留在安全模式的时间很长，因此需要对 fsimage 和 edits 进行合并来减小 edits 的大小。
 
 ## 合并
+
+对于 Hadoop 2.x 版本来说，fsimage 和 edits 文件的合并是由 Standby NameNode 来负责的。
+
+具体的过程如下：
+- Active NameNode 和 Standby NameNode 都会实时的跟 Journal Node 上的 edits 进行同步。
+- 在 Standby NameNode 上会一直运行一个线程 CheckpointerThread，主要职责就是定期检查合并的条件是否满足，如果满足条件则合并 fsimage 和 edits 文件，生成新的 fsimage 文件。
+- Standby NameNode 合并完成后，会把最新的 fsimage 文件上传到 Active NameNode 的相应目录中。
+- Active NameNode 接收到 Standby NameNode 发送的 fsimage 后，将旧的 fsimage 和 edits 文件清理掉。

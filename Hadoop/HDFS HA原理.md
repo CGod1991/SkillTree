@@ -1,4 +1,4 @@
-# HDFS HA 机制
+# HDFS HA 原理
 
 标签：HDFS HA
 
@@ -6,4 +6,3 @@
 
 ## Qurom Journal Manager
 
-## Paxos 算法
