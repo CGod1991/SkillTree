@@ -1,4 +1,4 @@
-# HDFS 的 fsimage 和 edits 详解
+# HDFS 的 FSImage 和 EditLog 详解
 
 标签：HDFS fsimage edits
 
