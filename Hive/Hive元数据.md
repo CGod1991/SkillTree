@@ -13,3 +13,4 @@
 该表保存了文件存储的基本信息，如 INPUT_FORMAT、OUTPUT_FORMAT、是否压缩等。
 
 ## location
+
