@@ -8,6 +8,8 @@
 
 Command Line Interface 的缩写，是 Hive 的命令行界面。
 
+cli 是胖客户端，需要本地具有所有的 Hive 组件，包括配置，同时还需要一个 Hadoop 客户端极其配置。
+
 使用 cli 不需要启动 hiveserver2 和 metastore 服务。
 
 ## hiveserver
@@ -22,5 +24,7 @@ Command Line Interface 的缩写，是 Hive 的命令行界面。
 
 ## metastore
 
-Hive 的元数据服务，主要负责在关系型数据库中管理表、分区的元数据，同时提供 API 供客户端访问这些信息。
+可选的 ThriftMetastore 组件，当 Hive 客户端连接到 ThriftMetastore 组件时，会和 JDBCMetastore 进行通信，进而获取元数据信息。
+
+通常，只有非 Java 客户端需要获取元数据存储信息时才会使用该组件。
 
