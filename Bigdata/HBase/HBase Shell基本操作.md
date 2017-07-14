@@ -13,3 +13,7 @@
 ### 给 user 用户授予 namespace hive 的所有权限
 
 `grant 'user' , 'RWXCA', '@hive'`
+
+## 创建表
+
+`create 't1', 'f1'`
