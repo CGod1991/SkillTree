@@ -13,3 +13,11 @@
 ## 创建表
 
 `create table t1 (name string, age int) row format delimited fields terminated by ',';`
+
+## 增加列
+
+`alter table t1 add columns (address string);`
+
+## 删除表
+
+`drop table t1;`
