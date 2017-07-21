@@ -4,6 +4,12 @@
 
 ---
 
+## 创建数据库
+
+`create database d1;`
+
+`create database d1 location '/path/to/d1';`
+
 ## 向表中插入数据
 
 `insert into table t1 select * from t2`
