@@ -27,3 +27,7 @@
 ## 删除表
 
 `drop table t1;`
+
+## 查看表的详细信息
+
+`desc extended t1;`
