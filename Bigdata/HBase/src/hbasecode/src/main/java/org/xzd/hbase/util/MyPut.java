@@ -27,13 +27,21 @@ public class MyPut {
 
         long startTime = System.currentTimeMillis();
         List<Put> list = new ArrayList<Put>();
-        for (int i = 9000000; i < 9500000; i++) {
+        for (int i = 9500000; i < 10500000; i++) {
             Put put = new Put(Bytes.toBytes(i));
             put.addColumn(Bytes.toBytes("name"), Bytes.toBytes("test"), Bytes.toBytes("zhangsan"));
             list.add(put);
         }
 
         table.put(list);
-        System.out.println("count time:" + (System.currentTimeMillis() - startTime) + " ms");
+        System.out.println("一百万条记录批量写花费时间：" + (System.currentTimeMillis() - startTime) + " ms");
+
+        long startTime1 = System.currentTimeMillis();
+        for (int i = 10500000; i < 11500000; i++) {
+            Put put = new Put(Bytes.toBytes(i));
+            put.addColumn(Bytes.toBytes("name"), Bytes.toBytes("test"), Bytes.toBytes("zhangsan"));
+            table.put(put);
+        }
+        System.out.println("一百万条记录依次写花费时间：" + (System.currentTimeMillis() - startTime1) + " ms");
     }
 }
