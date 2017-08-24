@@ -39,6 +39,7 @@ public class MyPut {
         long startTime1 = System.currentTimeMillis();
         for (int i = 10500000; i < 11500000; i++) {
             Put put = new Put(Bytes.toBytes(i));
+            put.setDurability();
             put.addColumn(Bytes.toBytes("name"), Bytes.toBytes("test"), Bytes.toBytes("zhangsan"));
             table.put(put);
         }
