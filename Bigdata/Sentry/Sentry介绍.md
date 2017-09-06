@@ -34,3 +34,95 @@ Policy Engine 主要负责判定输入的权限要求与已保存的权限描述
 
 Policy Provider 主要负责从文件或数据库中读取已设定好的访问权限。
 
+## 权限控制
+
+在 Sentry 中，所有对象的权限都是授予了角色，然后将角色与组进行关联，从而实现了对组内用户的权限控制。
+
+也就是说，如果某个用户想要具有对某个对象（如数据库、表、路径）的某种权限（如读、写、所有），那么需要先将该用户加入到某个组中，然后授予某个角色所申请的权限，最后将该角色和用户所在组进行关联即可。
+
+对于 Hive 来说，组与用户的关系主要基于 Hive 所采用的用户身份认证系统（如 Kerberos、LDAP），如果没有配置，则默认使用服务器上 Linux 系统的用户系统。
+
+## 安装
+
+Sentry 服务的比较简单，分为两部分：修改配置文件和初始化数据库。
+
+### 配置
+
+下载 Sentry 安装包之后，解压到指定目录，然后修改 $SENTRY_HOME/conf/sentry-site.xml 文件，修改后的内容如下：
+```shell
+<configuration>
+  <property>
+    <name>sentry.service.security.mode</name>
+    <value>none</value>
+  </property>
+  <property>
+    <name>sentry.store.jdbc.url</name>
+    <value>jdbc:mysql://localhost:3306/sentry?createDatabaseIfNotExist=true&amp;characterEncoding=UTF-8</value>
+  </property>
+  <property>
+    <name>sentry.service.admin.group</name>
+    <value>root,xzd</value>
+  </property>
+  <property>
+    <name>sentry.service.allow.connect</name>
+    <value>hive,hdfs</value>
+  </property>
+  <property>
+    <name>sentry.store.jdbc.driver</name>
+    <value>com.mysql.jdbc.Driver</value>
+  </property>
+  <property>
+    <name>sentry.store.jdbc.user</name>
+    <value>root</value>
+  </property>
+  <property>
+    <name>sentry.store.jdbc.password</name>
+    <value>1qaz2wsx</value>
+  </property>
+  <property>
+    <name>sentry.service.server.rpcport</name>
+    <value>8038</value>
+  </property>
+  <property>
+    <name>sentry.service.server.rpcaddress</name>
+    <value>0.0.0.0</value>
+  </property>
+  <property>
+    <name>sentry.store.group.mapping</name>
+    <value>org.apache.sentry.provider.common.HadoopGroupMappingService</value>
+  </property>
+  <property>
+    <name>sentry.verify.schema.version</name>
+    <value>false</value>
+  </property>
+</configuration>
+```
+
+### 初始化数据库
+
+Sentry 将数据保存在第三方的数据库中，因此需要对 Sentry 使用到的数据库进行初始化。执行如下命令：
+```shell
+$SENTRY_HOME/bin/sentry --command schema-tool --conffile $SENTRY_HOME/conf/sentry-site.xml --dbType mysql --initSchema
+```
+
+## 启停服务
+
+通过下面的命令对 Sentry 服务进行启停：
+```shell
+# start
+nohup $SENTRY_HOME/bin/sentry --command service --conffile $SENTRY_HOME/conf/sentry-site.xml
+
+# stop
+ps -ef | grep SentryMain | grep -v grep | awk '{print $2}' | xargs kill -9
+```
+
+## Hive
+
+### UDF
+
+Sentry 支持对创建 UDF 进行授权。使用如下命令进行授权：
+```shell
+grant ALL on URI "file:///usr/local/hive-1.1.0-cdh5.8.2/auxlib/hive-udf-samples-1.0.jar" to role xuzd_test_role
+```
+
+其中，URI 的内容为 UDF 所在 jar 包的路径。
