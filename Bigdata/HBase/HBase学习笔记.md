@@ -27,3 +27,24 @@
 - 主服务器不是实际数据存储或者检索路径的组成部分，它仅提供了负载均衡和集群管理，不为 region 服务器或客户端提供任何的数据服务，因此是轻量级服务器。
 - 同时，主服务器提供了元数据的管理操作，比如建表和创建列族。
 - HBase 表中的每行数据只由一台服务器所服务，因此 HBase 具有强一致性，使用多版本可以避免因并发解耦过程引起的编辑冲突，而且可以保留这一行的历史变化。
+
+
+## Thrift
+
+HBase 中的 Thrift Server 会在内存中分配空间用来检测介绍到的数据是否合法，因此如果接收到大量的无效数据，则 Thrift Server 有可能会挂掉。
+
+可以通过配置如下的参数来避免以上问题的发生：
+```shell
+<property> 
+  <name>hbase.regionserver.thrift.framed</name> 
+  <value>true</value> 
+</property> 
+<property> 
+  <name>hbase.regionserver.thrift.framed.max_frame_size_in_mb</name> 
+  <value>2</value> 
+</property> 
+<property> 
+  <name>hbase.regionserver.thrift.compact</name> 
+  <value>true</value> 
+</property>
+```
