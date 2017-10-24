@@ -23,26 +23,15 @@ public class MyPut {
         conf.set("hbase.master", "hadoop1:60010");
 
         Connection conn = ConnectionFactory.createConnection(conf);
-        Table table = conn.getTable(TableName.valueOf("test:person"));
+        Table table = conn.getTable(TableName.valueOf("Person"));
 
-        long startTime = System.currentTimeMillis();
         List<Put> list = new ArrayList<Put>();
-        for (int i = 9500000; i < 10500000; i++) {
+        for (int i = 0; i < 100; i++) {
             Put put = new Put(Bytes.toBytes(i));
             put.addColumn(Bytes.toBytes("name"), Bytes.toBytes("test"), Bytes.toBytes("zhangsan"));
             list.add(put);
         }
 
         table.put(list);
-        System.out.println("一百万条记录批量写花费时间：" + (System.currentTimeMillis() - startTime) + " ms");
-
-        long startTime1 = System.currentTimeMillis();
-        for (int i = 10500000; i < 11500000; i++) {
-            Put put = new Put(Bytes.toBytes(i));
-            put.setDurability();
-            put.addColumn(Bytes.toBytes("name"), Bytes.toBytes("test"), Bytes.toBytes("zhangsan"));
-            table.put(put);
-        }
-        System.out.println("一百万条记录依次写花费时间：" + (System.currentTimeMillis() - startTime1) + " ms");
     }
 }
