@@ -91,4 +91,8 @@ Perm Generation:     #当前的 “持久代” 内存分布
 
 - 查看指定进程：`top -p 进程id`
 
+## 查看系统 CPU 总核数
+
+grep 'model name' /proc/cpuinfo | wc -l
+
 
