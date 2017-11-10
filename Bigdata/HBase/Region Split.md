@@ -1,10 +1,10 @@
-# Region Split 策略
+# Region Split
 
 标签：HBase Region Split
 
 ---
 
-本文主要简单介绍一下 HBase 中对于 Region split 采用的策略，基于 hbase-1.2.0-cdh5.8.2 版本。
+本文主要简单介绍一下 HBase 中对于 Region Split 采用的策略以及大体的 Split 流程，基于 hbase-1.2.0-cdh5.8.2 版本。
 
 ## 概述
 
@@ -47,5 +47,17 @@ hbase.hregion.max.filesize * (1 + (RANDOM.nextFloat() - 0.5) * hbase.hregion.max
 从名字可以看出来，KeyPrefixRegionSplitPolicy 主要是根据 rowkey 的前缀来选择 Split Point。主要逻辑如下：
 - 如果在建表的时候配置了 `KeyPrefixRegionSplitPolicy.prefix_length` 的大小，则前缀大小设置为该值，否则选取 `prefix_split_key_policy.prefix_length` 的值，如果该值也没有配置，则采用默认的 IncreasingToUpperBoundRegionSplitPolicy 策略。
 - 选择该 Region 中最大的一个 Store 中的最大的一个文件的最中心的 block 的 start rowkey，然后截取该 rowkey 的前面部分，大小与前缀大小一致，以该部分的内容作为 Split Point。比如：中间点的 rowkey 为 `bbccc123`，前缀大小为 5，则 Split Point 为 `bbccc`。这样，所有 rowkey 以 `bbccc` 为前缀的数据都会存在同一个 Region 中。
+
+## Split 流程
+
+当 regionX 进行切分时，具体的切分流程如下：
+1. 在 ZK 中的 /region-in-transition 目录下，创建 regionX 对应的 znode，并标记该 region 的状态为 spliting；
+2. 由于 master 一直在 watch ZK 中的 /region-in-transition 目录，所以可以立即感知到 regionX 将要进行切分。然后 master 会修改内存中 regionX 的状态；
+3. 在 HDFS 上 regionX 的目录下，创建临时文件夹 .split ，用来保存切分后的子 region 信息；
+4. 关闭 regionX：主要是停止 regionX 对外提供写服务，并触发 regionX 的 flush 操作，将 memstore 中的数据全部持久化到磁盘；
+5. 在 .split 文件夹中生成两个子文件夹，分别生成引用文件，指向 regionX 的文件。引用文件的文件名格式为：`父 region 对应的 HFile 文件.父 region 名`，引用文件内容为切分点的 splitkey 和表示该引用文件引用的是父文件的上半部分还是下半部分的 boolean 变量；
+6. 将两个子文件夹拷贝到和 regionX 同级的目录中，形成两个新的子 region；
+7. regionX 进行下线，不再对外提供服务；
+8. 两个新的子 region 上线，对外提供服务。
 
 
