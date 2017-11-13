@@ -22,7 +22,9 @@ Memstore Flush 主要包括以下几种情况
 
 ### Memstore 级别限制
 
-当 Region 中的任意一个 Memstore 的大小达到了上限（由参数 hbase.hregion.memstore.flush.size 配置，默认为 128MB）时，会触发 Memstore Flush 操作。
+根据 HBase 官网文档，当 Region 中的任意一个 Memstore 的大小达到了上限（由参数 hbase.hregion.memstore.flush.size 配置，默认为 128MB）时，会触发 Memstore Flush 操作。
+
+但是通过查看 HBase 源码发现，实际上是用 Region 中的所有 Memstore 的大小去和 128MB 做比较，所以实际上还是 Region 级别的限制。
 
 具体的 Flush 策略可以通过建表时配置 FLUSH_POLICY 来进行制定，目前支持 FlushAllStoresPolicy 和 FlushLargeStoresPolicy 两种 Flush 策略。
 
