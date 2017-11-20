@@ -50,4 +50,17 @@ Compaction 的触发主要有三种情况：Memstore Flush、周期性检查和�
 
 对于 Major Compaction，因为是合并 Store 下的所有文件，所以并不存在如何选择合并文件的问题。
 
-对于 Minor Compaction，主要有三种选择合并文件的策略：RatioBasedCompactionPolicy、ExploringCompactionPolicy 和 StripeCompactionPolicy。
+对于 Minor Compaction，主要有三种 Compaction 策略：RatioBasedCompactionPolicy、ExploringCompactionPolicy 和 StripeCompactionPolicy。
+
+### RatioBasedCompactionPolicy
+
+RatioBasedCompactionPolicy 是 0.96 版本之前的默认 Compaction Policy。
+
+采用该策略时，当 Store 中未处于 Compaction 过程中的文件数大于等于 `hbase.hstore.compaction.min` 配置的值时（默认为 3），会触发 Compaction 操作。
+
+当触发 Compaction 之后，需要选择文件来进行 Compaction，具体的选择逻辑如下（待完善）：
+> 如果 Store 中有文件在进行 Compact，则排除掉这些文件，然后排除掉大文件（大小超过 hbase.hstore.compaction.max.size 的文件，默认为LONG.MAX_VALUE），但不排除所有的 referrence 文件，即使 referrence 文件的大小超过了 hbase.hstore.compaction.max.size  的大小。
+
+### ExploringCompactionPolicy
+
+### StripeCompactionPolicy
