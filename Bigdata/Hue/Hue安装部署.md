@@ -126,5 +126,31 @@ Hue 对不同的 Hadoop 组件采用分段配置的方式。
 
 需要注意的是，第一次访问时，需要创建用户和密码，因此可以使用自定义的用户和密码登陆。但需要记住该用户名和密码，后续会使用该用户作为管理员账户。
 
+## 整合 LDAP
+
+Hue 支持接入 LDAP 系统，这样用户登陆时的验证工作将交给 LDAP 服务去做，Hue 本身也就不会保存用户的信息，如登陆密码和组映射关系等。
+
+但需要注意的是，在接入 LDAP 之前，需要先在 Hue 中创建一个 LDAP 中存在的用户，且使用相同的密码，然后给这个用户赋予管理员权限。否则，在配置好 LDAP 之后，将无法登陆 Hue。
+
+### 配置
+
+在 $HUE_HOME/desktop/conf/hue.ini 中的 [desktop] -> [[auth]] 中配置如下属性：
+> backend=desktop.auth.backend.LdapBackend
+
+在 [desktop] -> [[ldap]] 中配置如下属性：
+> base_dn="ou=wecloud,dc=guahao-inc,dc=com"
+> ldap_url=ldap://127.0.0.1:389
+> bind_dn="cn=manager,dc=guahao-inc,dc=com"
+> bind_password=secret
+> search_bind_authentication=true
+
+在 [desktop] -> [[ldap]] -> [[[users]]] 中配置如下属性：
+> user_filter="objectclass=inetOrgPerson"
+> user_name_attr=cn
+
+在 [desktop] -> [[ldap]] -> [[[groups]]] 中配置如下属性：
+> group_filter="objectclass=groupOfNames"
+> group_name_attr=cn
+> group_member_attr=member
 
 
