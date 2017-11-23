@@ -41,14 +41,6 @@ Hue 对不同的 Hadoop 组件采用分段配置的方式。
 > // This should be the hadoop cluster admin
    default_hdfs_superuser=hdfs
 
-在 $HADOOP_HOME/etc/hadoop/hdfs-site.xml 中增加以下内容：
-```shell
-<property>
-  <name>dfs.webhdfs.enabled</name>
-  <value>true</value>
-</property>
-```
-
 在 $HADOOP_HOME/etc/hadoop/core-site.xml 中增加以下内容：
 ```shell
 <property>
@@ -63,10 +55,21 @@ Hue 对不同的 Hadoop 组件采用分段配置的方式。
 
 ### HDFS
 
+#### 非 HA 集群
+
 在 [hadoop] 中的 [[hdfs_clusters]] 中配置如下属性：
 > fs_defaultfs=hdfs://hadoop1:9000
 > webhdfs_url=http://hadoop1:50070/webhdfs/v1
 > hadoop_conf_dir=/opt/hadoop/etc/hadoop
+
+
+在 $HADOOP_HOME/etc/hadoop/hdfs-site.xml 中增加以下内容：
+```shell
+<property>
+  <name>dfs.webhdfs.enabled</name>
+  <value>true</value>
+</property>
+```
 
 在 $HADOOP_HOME/etc/hadoop/core-site.xml 中增加以下内容：
 ```shell
@@ -79,6 +82,41 @@ Hue 对不同的 Hadoop 组件采用分段配置的方式。
   <value>*</value>
 </property>
 ```
+
+#### HA 集群
+
+对于 HA 集群，Hue 只支持使用 httpfs 方式访问 HDFS 集群。
+
+在 [hadoop] 中的 [[hdfs_clusters]] 中配置如下属性：
+> fs_defaultfs=hdfs://mycluster
+> logical_name=mycluster
+> webhdfs_url=http://hadoop1:14000/webhdfs/v1
+> hadoop_conf_dir=/opt/hadoop/etc/hadoop
+
+在 $HADOOP_HOME/etc/hadoop/core-site.xml 中增加以下内容：
+```shell
+<property>
+  <name>hadoop.proxyuser.httpfs.hosts</name>
+  <value>*</value>
+</property>
+<property>
+  <name>hadoop.proxyuser.httpfs.groups</name>
+  <value>*</value>
+</property>
+```
+
+在 $HADOOP_HOME/etc/hadoop/httpfs-site.xml 中增加以下内容：
+```shell
+<property>
+  <name>httpfs.proxyuser.hue.hosts</name>
+  <value>*</value>
+</property>
+<property>
+  <name>httpfs.proxyuser.hue.groups</name>
+  <value>*</value>
+</property>
+```
+
 
 ### YARN
 
@@ -96,11 +134,34 @@ Hue 对不同的 Hadoop 组件采用分段配置的方式。
 > hive_server_port=10000
 > hive_conf_dir=/opt/hive/conf
 
+如果 Hive 中 hive.server2.authentication 配置了 LDAP，则还需要再增加以下属性：
+> auth_username=hue
+> auth_password=xxx
+
+需要注意的是，上面配置的用户名和密码必须是在 LDAP 中存在的用户和密码。因为 Hue 会拿这个用户去跟 HiveServer2 实例进行连接，然后 HiveServer2 实例用这个用户去 LDAP 中做校验。
+
 ### HBase
 
 在 [hbase] 中配置如下属性：
 > hbase_clusters=(Cluster|hadoop1:9090)
 > hbase_conf_dir=/opt/hbase/conf
+
+> //如果在 HBase 中配置了 hbase.regionserver.thrift.framed 为 true 或者启动 HBase Thrift 时配置了 -f 参数，则 thrift_transport 需要设置为 framed。
+> thrift_transport=buffered 
+
+
+在 $HBASE_HOME/conf/hbase-site.xml 中增加以下内容：
+```shell
+<property>
+  <name>hbase.thrift.support.proxyuser</name>
+  <value>true</value>
+</property>
+  
+<property>
+  <name>hbase.regionserver.thrift.http</name>
+  <value>true</value>
+</property>
+```
 
 在 $HADOOP_HOME/etc/hadoop/core-site.xml 中增加以下内容：
 ```shell
@@ -113,6 +174,26 @@ Hue 对不同的 Hadoop 组件采用分段配置的方式。
   <value>*</value>
 </property>
 ```
+
+### MySQL
+
+Hue 默认使用 sqlite 来保存 Hue 的元数据，但也支持使用用户自定义的数据库，目前支持 postgresql_psycopg2, mysql, sqlite3 或 oracle。
+
+1. 在 [desktop] -> [[database]] 中配置如下属性：
+> engine=mysql
+    host=192.168.3.151
+    port=3306
+    user=xuzd
+    password=xxx
+    name=hue // Hue 使用的数据库名
+2. 在 MySQL 中创建 Hue 使用的数据库：
+> create database hue default character set utf8 default collate utf8_general_ci;
+3. 给 xuzd 用户授权：
+> grant all on hue.* to 'xuzd'@'%' identified by 'xxx';
+> flush privileges;
+4. 使用 Hue 命令初始化数据库：
+> $HUE_HOME/build/env/bin/hue syncdb
+> $HUE_HOME/build/env/bin/hue migrate
 
 ## 启动
 
@@ -152,5 +233,9 @@ Hue 支持接入 LDAP 系统，这样用户登陆时的验证工作将交给 LDA
 > group_filter="objectclass=groupOfNames"
 > group_name_attr=cn
 > group_member_attr=member
+
+### 用户同步
+
+可以在 Hue 中同步 LDAP 中的用户，但需要注意的是：如果同步组，则可以选择是否在 Hue 中创建未存在的用户；如果只同步用户，则只会同步已在 Hue 中存在的用户的信息。
 
 
