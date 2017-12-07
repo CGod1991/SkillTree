@@ -6,6 +6,12 @@
 
 ## 简介
 
+Hue 是一个可快速开发调试 Hadoop 生态圈中各种应用的一个基于浏览器的图形化用户接口。
+
+通过 Hue，用户可以访问 HDFS 进行文件浏览、查询 Hive 中的表数据和 Hive 元数据、查询 HBase 中的表、监控和提交 MR 任务，等等。
+
+Hue 的好处是提供了一个方便用户查看管理 Hadoop 各个组件的图形化界面。
+
 ## 依赖
 
 安装 Hue 需要以下依赖：
@@ -16,9 +22,9 @@
 从 [这里](http://archive.cloudera.com/cdh5/cdh/5/hue-3.9.0-cdh5.8.2.tar.gz) 下载 Hue 安装包。
 
 进入解压后的目录，执行以下命令进行安装：
-> PREFIX=$HUE_HOME make install 
+> PREFIX=$HUE make install 
 
-其中，$HUE_HOME 为 Hue 安装目录。
+其中，$HUE 为 Hue 安装目录的上一层目录。
 
 ## 配置
 
