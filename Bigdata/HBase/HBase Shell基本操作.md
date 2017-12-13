@@ -1,8 +1,10 @@
-# HBase Shell 基本操作
+# HBase 基本操作
 
-标签：HBase Shell
+标签：HBase 
 
 ---
+
+## Shell
 
 ## 创建 namespace
 
@@ -88,3 +90,8 @@ For example:
 NOTE: Above commands are only applicable if running with the AccessController coprocessor
 
 ```
+
+## hbase 命令
+
+可以通过 hbase 命令来查看具体的 HFile 的内容，用法如下：
+> $HBASE_HOME/bin/hbase org.apache.hadoop.hbase.io.hfile.HFile -f hdfs://wedp-cluster/data/hbase/data/xuzd/test_split/0b4da2531010ee453b2ba91dfbb713c8/0/760756a48c3740fb8f27873f7c01c387 -p

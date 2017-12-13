@@ -90,5 +90,26 @@
     <orderEntry type="library" name="Maven: org.apache.directory.api:api-asn1-api:1.0.0-M20" level="project" />
     <orderEntry type="library" name="Maven: org.apache.directory.api:api-util:1.0.0-M20" level="project" />
     <orderEntry type="library" name="Maven: org.apache.curator:curator-framework:2.7.1" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://F:/tmp/phoenix-4.8.0-cdh5.8.0-client.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://F:/tmp/phoenix-4.8.0-cdh5.8.0-client.jar!/" />
+          <root url="jar://F:/tmp/phoenix-4.8.0-cdh5.8.0-client.jar!/org/apache/phoenix/shaded" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/src/main/resources/conf" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
