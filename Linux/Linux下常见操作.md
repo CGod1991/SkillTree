@@ -145,3 +145,10 @@ vi 显示行号:
 
 查看系统版本：
 > cat /etc/issue
+
+tar 压缩时排除指定的目录：
+> tar -czvf test.tar.gz --exclude=/path/to/exclude1 --exclude=/path/to/exclude2 test
+> 注意：如果要排除 exclude 目录，则不要使用 exclude/ 这种格式。
+
+查看指定深度的目录大小：
+> du -h test/ --max-depth=1

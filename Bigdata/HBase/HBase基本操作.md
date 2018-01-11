@@ -6,26 +6,16 @@
 
 ## Shell
 
-## 创建 namespace
+创建 namespace:
+> create_namespace n1
 
-`create_namespace n1`
+创建表:
+> create 't1', 'f1'
 
-## 授权
+查看当前用户:
+> whoami
 
-### 给 user 用户授予 namespace hive 的所有权限
-
-`grant 'user' , 'RWXCA', '@hive'`
-
-## 创建表
-
-`create 't1', 'f1'`
-
-## 查看当前用户
-
-`whoami`
-
-## 权限控制
-
+权限控制:
 ```shell
 Command: grant
 Grant users specific rights.
@@ -93,14 +83,11 @@ NOTE: Above commands are only applicable if running with the AccessController co
 
 ## hbase 命令
 
-### 查看 HFile 内容
-
+查看 HFile 内容:
 可以通过 hbase 命令来查看具体的 HFile 的内容，用法如下：
 > $HBASE_HOME/bin/hbase org.apache.hadoop.hbase.io.hfile.HFile -f hdfs://wedp-cluster/data/hbase/data/xuzd/test_split/0b4da2531010ee453b2ba91dfbb713c8/0/760756a48c3740fb8f27873f7c01c387 -p
 
-### bulkload
-
-importtsv 的参数如下：
+bulkload importtsv 的参数如下：
 ```shell
 [hbase@cdh3-151 hbase-current]$ bin/hbase org.apache.hadoop.hbase.mapreduce.ImportTsv
 ERROR: Wrong number of arguments: 0
@@ -161,3 +148,13 @@ usage: completebulkload /path/to/hfileoutputformat-output tablename
 
 使用 completebulkload 将生成的 hfile 文件导入 HBase 中的表：
 > $HBASE_HOME/bin/hbase org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles hdfs://wedp-cluster/user/xuzd/out xuzd:wordcount
+
+平滑重启 RS：
+> 在客户端执行以下命令：
+> bin/graceful_stop.sh --restart --reload --debug regionserver_nodename
+> 
+> 这个操作是平滑的重启regionserver进程，对服务不会有影响，他会先将需要重启的regionserver上面的所有region迁移到其它的服务器，然后重启，最后又会将之前的region迁移回来，但我们修改一个配置时，可以用这种方式重启每一台机子，这个命令会关闭balancer，所以最后我们要在hbase shell里面执行一下balance_switch true，对于hbase regionserver重启，不要直接kill进程，这样会造成在zookeeper.session.timeout这个时间长的中断，也不要通过bin/hbase-daemon.sh stop regionserver去重启，如果运气不太好，-ROOT-(目前root表已经删除)或者hbase:meta表在上面的话，所有的请求会全部失败。
+
+Export Snapshot:
+> bin/hbase org.apache.hadoop.hbase.snapshot.ExportSnapshot -snapshot MySnapshot -copy-to hdfs://srv2:8020/hbase -mappers 16
+
