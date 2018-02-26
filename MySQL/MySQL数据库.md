@@ -21,3 +21,21 @@
 	DELIMITER ;
 
 	CALL TEST();
+
+## 授权
+
+给用户授权：
+> GRANT ALL PRIVILEGES ON *.* TO 'root'@'192.168.119.69' IDENTIFIED BY 'root';
+FLUSH PRIVILEGES;
+
+安装客户端：
+> yum install mysql
+
+安装服务端：
+> yum install mysql-server mysql-devel
+
+设置 root 用户密码：
+> mysqladmin -u root password "newpass"
+
+添加用户：
+> create user 'sentry'@'192.168.99.134' identified by 'sentry';

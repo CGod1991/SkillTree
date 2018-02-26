@@ -50,7 +50,7 @@ Standby NameNode 除了定时从 QJM 同步 EditLog 之外，还会定期对内�
 
 这样，通过 QJM，主备 NameNode 实现了元数据的同步，那么当主备进行切换的时候，他们之间又是如何进行交互的呢？
 
-###　主备切换
+### 主备切换
 
 当 Active NameNode 出现故障异常退出的时候，需要保证在 Standby NameNode 切换成 Active 状态后元数据与 Active NameNode 保持一致。但是从之前的介绍中可以得知，Standby NameNode 是定时从 QJM 上获取 EditLog 文件，那么当 Active NameNode 出现故障时，Standby NameNode 上的数据并不是严格同步的。
 

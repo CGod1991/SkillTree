@@ -54,3 +54,6 @@ create table t1 (name string, age int) row format delimited fields terminated by
 
 查看某个 UDF 属性：
 > describe function my_udf;
+
+创建永久函数：
+> create function HiveParse as 'hiveParse.HiveParse' using jar 'hdfs://wecloud-cluster/usr/local/hive-current/auxlib/HiveParse.jar';

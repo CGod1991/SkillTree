@@ -13,4 +13,5 @@
 - -m <num_map>：同时拷贝的 map 最大数目。
 - -i：忽略拷贝过程中的失败。
 
-## 
+查看 Hadoop 配置了哪些 CLASSPATH：
+> $HADOOP_HOME/bin/hadoop classpath

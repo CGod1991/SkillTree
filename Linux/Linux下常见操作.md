@@ -84,6 +84,7 @@ Perm Generation:     #当前的 “持久代” 内存分布
 
 查看指定进程:
 > top -p 进程id
+> top -Hp pid:查看该进程下各个线程的cpu使用情况.
 
 查看系统 CPU 总核数:
 > grep 'model name' /proc/cpuinfo | wc -l
@@ -91,6 +92,10 @@ Perm Generation:     #当前的 “持久代” 内存分布
 查看进程 CPU 和内存占用率排序：
 > ps auxw --sort=rss //按照内存使用的实际大小排序，升序
 > ps auxw --sort=%cpu //按照 CPU 使用的百分比排序，升序
+
+查看进程时显示完整的用户名（因为 Linux 系统显示用户名的长度默认为8，超过8个字符的用户名会做截断或替换处理）：
+> ps -o ruser=XXXXXXXXXXXXXXXX -e -o pid,ppid,c,stime,tty,time,cmd
+> 这样，可以指定显示用户名的长度上限为 XXXXXXXXXXXXXXXX 的长度。
 
 awk 获取最后一列：
 > cat file | awk -F ':' '{print $NF}'
@@ -137,6 +142,9 @@ awk 获取最后一列：
 使用多个查询条件（或）：
 > cat test | grep -E "abc|ac"
 
+过滤符合条件的前后几行：
+> cat test | grep -1 "abc"
+
 删除file1之外的所有文件：
 > ls | grep -v file1 | xargs rm
 
@@ -152,3 +160,7 @@ tar 压缩时排除指定的目录：
 
 查看指定深度的目录大小：
 > du -h test/ --max-depth=1
+
+查看进程的 GC 情况：
+> jstat -gc pid  
+> 可以显示gc的信息，查看gc的次数，及时间。其中最后五项，分别是young gc的次数，young gc的时间，full gc的次数，full gc的时间，gc的总时间
